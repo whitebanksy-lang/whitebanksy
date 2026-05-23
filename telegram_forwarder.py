@@ -25,15 +25,18 @@ Telegram Forwarder Bot — полная версия
 
 import asyncio
 import logging
+import os
 import re
 import sqlite3
 import json
+import sys
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from telethon import TelegramClient, events
 from telethon.errors import ChatForwardsRestrictedError, FloodWaitError
+from telethon.sessions import StringSession
 from telethon.tl.types import (
     User, Chat, Channel,
     InputPeerUser, InputPeerChat, InputPeerChannel
@@ -41,14 +44,21 @@ from telethon.tl.types import (
 
 # ╔══════════════════════════════════════════════════════╗
 # ║                    КОНФИГУРАЦИЯ                      ║
+# ║  Все секреты читаются из переменных окружения.       ║
+# ║  Задайте их в панели Scalingo → Environment.         ║
 # ╚══════════════════════════════════════════════════════╝
 
-API_ID       = 21365620
-API_HASH     = 'acc1684eac294ea198631be3c9b14aa9'
-PHONE_NUMBER = '+1 645 226 1496'
+def _require_env(name: str) -> str:
+    val = os.environ.get(name, '').strip()
+    if not val:
+        print(f"❌ Переменная окружения {name} не задана. Остановка.", flush=True)
+        sys.exit(1)
+    return val
 
-# ID чата, КУДА пересылать (int!)
-DESTINATION_CHAT_ID = 8734055326
+API_ID              = int(_require_env('API_ID'))
+API_HASH            = _require_env('API_HASH')
+SESSION_STRING      = _require_env('SESSION_STRING')   # строка сессии (см. README)
+DESTINATION_CHAT_ID = int(_require_env('DESTINATION_CHAT_ID'))
 
 # Интервал периодического сканирования (секунды)
 SCAN_INTERVAL = 5 * 60
@@ -524,9 +534,9 @@ async def main():
     db_init()
     config_init()
 
-    client = TelegramClient('session_name', API_ID, API_HASH)
+    client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
-    await client.start(phone=PHONE_NUMBER)
+    await client.start()
 
     me = await client.get_me()
     my_id = me.id
