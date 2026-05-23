@@ -42,6 +42,14 @@ from telethon.tl.types import (
     InputPeerUser, InputPeerChat, InputPeerChannel
 )
 
+# Локально читаем переменные из файла .env (он в .gitignore, в репо не попадает)
+# На Scalingo .env нет — переменные берутся из Dashboard -> Environment
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # ╔══════════════════════════════════════════════════════╗
 # ║                    КОНФИГУРАЦИЯ                      ║
 # ║  Все секреты читаются из переменных окружения.       ║
