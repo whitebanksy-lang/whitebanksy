@@ -1,0 +1,23 @@
+[Unit]
+Description=Telegram Forwarder Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botuser
+WorkingDirectory=/opt/tg-forwarder
+ExecStart=/opt/tg-forwarder/venv/bin/python telegram_forwarder.py
+Restart=on-failure
+RestartSec=10
+# Перезапуск не чаще 5 раз за 2 минуты — защита от crash-loop
+StartLimitInterval=120
+StartLimitBurst=5
+
+# Логи через journald (просмотр: journalctl -u tg-forwarder -f)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tg-forwarder
+
+[Install]
+WantedBy=multi-user.target
